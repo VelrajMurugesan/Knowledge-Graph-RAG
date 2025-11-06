@@ -113,6 +113,41 @@ NEO4J_AUTH=neo4j/knowledge_graph_demo_2024
 
 ## Python Issues
 
+### Client.__init__() got an unexpected keyword argument 'proxies'
+
+**Error Message:**
+```
+Client.__init__() got an unexpected keyword argument 'proxies' (type=type_error)
+```
+
+**Cause:**
+This happens when there's a version mismatch between OpenAI SDK and LangChain. The older parameter name `openai_api_key` is incompatible with newer OpenAI SDK versions.
+
+**Solution:**
+
+This has been fixed in the latest version of the code. If you're still seeing this error:
+
+1. **Pull the latest code:**
+   ```bash
+   git pull origin main
+   ```
+
+2. **Or manually update the files:**
+   - In `traditional_rag/rag_pipeline.py` lines 44-53
+   - In `knowledge_graph/kg_pipeline.py` lines 56-60
+   - Change `openai_api_key=` to `api_key=`
+
+3. **Reinstall dependencies:**
+   ```bash
+   pip install --upgrade langchain langchain-openai openai
+   ```
+
+**Verification:**
+```python
+# Should work without errors
+python demo.py
+```
+
 ### ModuleNotFoundError
 
 **Error Message:**

@@ -43,13 +43,13 @@ class TraditionalRAG:
         # Initialize components
         self.embeddings = OpenAIEmbeddings(
             model=embedding_model,
-            openai_api_key=openai_api_key
+            api_key=openai_api_key
         )
 
         self.llm = ChatOpenAI(
             model=model_name,
             temperature=0,
-            openai_api_key=openai_api_key
+            api_key=openai_api_key
         )
 
         self.text_splitter = RecursiveCharacterTextSplitter(

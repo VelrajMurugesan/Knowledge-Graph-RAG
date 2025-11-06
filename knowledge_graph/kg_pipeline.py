@@ -56,7 +56,7 @@ class KnowledgeGraphRAG:
         self.llm = ChatOpenAI(
             model=model_name,
             temperature=0,
-            openai_api_key=openai_api_key
+            api_key=openai_api_key
         )
 
         print("Knowledge Graph RAG initialized")
