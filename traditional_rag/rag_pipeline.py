@@ -109,7 +109,7 @@ class TraditionalRAG:
 
     def _create_qa_chain(self) -> None:
         """Create the QA chain with custom prompt."""
-        prompt_template = """You are a helpful AI assistant answering questions about the CloudStore API documentation.
+        prompt_template = """You are a helpful AI assistant answering questions about API documentation for CloudStore, DriveSphere, and SkyVault APIs.
 
 Use the following pieces of context to answer the question at the end. If you don't know the answer based on the context, say so - don't make up information.
 

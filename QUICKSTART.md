@@ -42,11 +42,12 @@ pip install -r requirements.txt
 
 ## Step 3: Configure OpenAI API Key (30 seconds)
 
-Edit the `.env` file and add your OpenAI API key:
+Edit the `.env` file and add your OpenAI API Key & NEO4J_PASSWORD:
 
 ```bash
 OPENAI_API_KEY=sk-your-actual-api-key-here
 ```
+NEO4J_PASSWORD=type your password
 
 The Neo4j settings are already configured to match the Docker setup!
 

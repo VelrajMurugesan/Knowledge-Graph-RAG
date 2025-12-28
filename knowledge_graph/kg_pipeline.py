@@ -157,7 +157,7 @@ class KnowledgeGraphRAG:
 
         # Generate answer using LLM
         generation_start = time.time()
-        prompt = f"""You are a helpful AI assistant answering questions about the CloudStore API documentation.
+        prompt = f"""You are a helpful AI assistant answering questions about API documentation for CloudStore, DriveSphere, and SkyVault APIs.
 
 Use the following knowledge graph facts to answer the question. These facts represent relationships and entities extracted from the documentation.
 

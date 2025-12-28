@@ -2,7 +2,7 @@
 Knowledge Graph vs Traditional RAG Demo
 
 This script demonstrates the differences between Traditional RAG and Knowledge Graph-based RAG
-using the CloudStore API documentation as sample data.
+using CloudStore, DriveSphere, and SkyVault API documentation as sample data.
 """
 
 import os
@@ -20,15 +20,23 @@ from comparison import compare_systems, run_comparison_suite, plot_comparison_me
 console = Console()
 
 
-# Sample questions that highlight KG advantages
+# Sample questions that highlight KG advantages across all 3 API documents
 DEMO_QUESTIONS = [
-    "How does the AuthenticationService relate to the UserManager?",
-    "What services depend on the PermissionManager?",
-    "Explain the file upload workflow and all the services involved.",
-    "How are share links related to notifications?",
-    "What is the relationship between QuotaManager and StorageManager?",
-    "Which services interact with the FileManager?",
-    "How does the search functionality work with permissions?"
+    # CloudStore API questions
+    "How does the AuthenticationService relate to the UserManager in CloudStore?",
+    "What services depend on the PermissionManager in CloudStore?",
+    "Explain the file upload workflow in CloudStore and all the services involved.",
+    # DriveSphere API questions
+    "How does AssetPipeline relate to MediaProcessor and MetadataEnricher in DriveSphere?",
+    "What is the relationship between ActivityService and RealtimeGateway in DriveSphere?",
+    "How does RoleEngine handle permissions in DriveSphere?",
+    # SkyVault API questions
+    "How does DocumentService interact with StorageEngine and RetentionService in SkyVault?",
+    "What is the relationship between MemberService and AccessControlService in SkyVault?",
+    # Cross-API questions
+    "Compare authentication methods across CloudStore, DriveSphere, and SkyVault APIs",
+    "What are the differences in storage architecture between the three APIs?",
+    "How do the three APIs handle document/file permissions differently?"
 ]
 
 
@@ -75,15 +83,33 @@ async def initialize_systems():
         embedding_model=embedding_model
     )
 
-    # Load and index documents
-    doc_path = Path("sample_data/api_documentation.txt")
-    if not doc_path.exists():
-        console.print(f"[bold red]Error: Sample data not found at {doc_path}[/bold red]")
+    # Load and index all documents from sample_data folder
+    sample_data_path = Path("sample_data")
+    document_files = [
+        "api_documentation.txt",  # CloudStore API
+        "drivesphere_platform_api.txt",  # DriveSphere API
+        "skyvault_api_documentation.txt"  # SkyVault API
+    ]
+    
+    all_documents = []
+    loaded_files = []
+    for doc_file in document_files:
+        doc_path = sample_data_path / doc_file
+        if not doc_path.exists():
+            console.print(f"[yellow]Warning: Sample data not found at {doc_path}[/yellow]")
+            continue
+        console.print(f"[yellow]Loading {doc_file}...[/yellow]")
+        docs = rag_system.load_documents(str(doc_path))
+        all_documents.extend(docs)
+        loaded_files.append(doc_file)
+    
+    if not all_documents:
+        console.print(f"[bold red]Error: No documents found in sample_data folder[/bold red]")
         return None, None
-
-    documents = rag_system.load_documents(str(doc_path))
-    rag_system.build_index(documents)
-    console.print("[green][OK] Traditional RAG initialized[/green]\n")
+    
+    console.print(f"[yellow]Building index with {len(all_documents)} total chunks...[/yellow]")
+    rag_system.build_index(all_documents)
+    console.print(f"[green][OK] Traditional RAG initialized with {len(loaded_files)} document(s)[/green]\n")
 
     # Initialize Knowledge Graph RAG
     console.print("[yellow]2. Initializing Knowledge Graph RAG...[/yellow]")
@@ -110,12 +136,36 @@ async def initialize_systems():
     # Build knowledge graph if needed
     if stats['total_nodes'] == 0:
         console.print("[yellow]Building knowledge graph (this may take a few minutes)...[/yellow]")
-        # Split documents for KG
-        doc_texts = [doc.page_content for doc in documents]
-        await kg_system.add_documents_to_graph(doc_texts, source="api_documentation")
-
+        
+        # Load all documents for KG with proper source tags
+        document_sources = {
+            "api_documentation.txt": "cloudstore_api",
+            "drivesphere_platform_api.txt": "drivesphere_api",
+            "skyvault_api_documentation.txt": "skyvault_api"
+        }
+        
+        loaded_sources = 0
+        # Split documents by source for KG - reuse text splitter from rag_system
+        for doc_file, source_name in document_sources.items():
+            doc_path = sample_data_path / doc_file
+            if not doc_path.exists():
+                console.print(f"[yellow]Warning: {doc_file} not found, skipping...[/yellow]")
+                continue
+            
+            console.print(f"[yellow]Adding {doc_file} to knowledge graph...[/yellow]")
+            # Load document content
+            with open(doc_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+            
+            # Split into chunks for KG processing using the same text splitter
+            doc_chunks = rag_system.text_splitter.split_text(content)
+            
+            # Add each chunk to the graph
+            await kg_system.add_documents_to_graph(doc_chunks, source=source_name)
+            loaded_sources += 1
+        
         stats = kg_system.get_graph_statistics()
-        console.print(f"[green][OK] Knowledge Graph initialized[/green]")
+        console.print(f"[green][OK] Knowledge Graph initialized with {loaded_sources} document source(s)[/green]")
         console.print(f"  - Nodes: {stats['total_nodes']}")
         console.print(f"  - Relationships: {stats['total_relationships']}")
         console.print(f"  - Entities: {stats['num_entities']}")
@@ -139,13 +189,17 @@ async def run_single_comparison(rag_system, kg_system):
     for i, q in enumerate(DEMO_QUESTIONS, 1):
         console.print(f"  {i}. {q}")
 
-    console.print("\n[yellow]Enter a question number (1-7) or type your own question:[/yellow]")
+    console.print(f"\n[yellow]Enter a question number (1-{len(DEMO_QUESTIONS)}) or type your own question:[/yellow]")
     user_input = Prompt.ask("Question")
 
     # Parse input
-    if user_input.isdigit() and 1 <= int(user_input) <= len(DEMO_QUESTIONS):
-        question = DEMO_QUESTIONS[int(user_input) - 1]
-    else:
+    try:
+        question_num = int(user_input)
+        if 1 <= question_num <= len(DEMO_QUESTIONS):
+            question = DEMO_QUESTIONS[question_num - 1]
+        else:
+            question = user_input
+    except ValueError:
         question = user_input
 
     # Run comparison
@@ -189,7 +243,7 @@ def visualize_knowledge_graph(kg_system):
 async def interactive_mode(rag_system, kg_system):
     """Run interactive question-answering mode."""
     console.print("\n[bold cyan]Interactive Mode[/bold cyan]\n")
-    console.print("[yellow]Ask questions about the CloudStore API (type 'exit' to quit)[/yellow]\n")
+    console.print("[yellow]Ask questions about CloudStore, DriveSphere, or SkyVault APIs (type 'exit' to quit)[/yellow]\n")
 
     while True:
         question = Prompt.ask("\n[bold]Your question[/bold]")
@@ -204,7 +258,8 @@ async def main():
     """Main demo function."""
     console.print(Panel.fit(
         "[bold green]Knowledge Graph vs Traditional RAG Demo[/bold green]\n"
-        "Demonstrating the advantages of Knowledge Graph-based RAG over Traditional RAG",
+        "Demonstrating the advantages of Knowledge Graph-based RAG over Traditional RAG\n"
+        "Using CloudStore, DriveSphere, and SkyVault API documentation",
         border_style="green"
     ))
 

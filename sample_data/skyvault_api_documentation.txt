@@ -1,0 +1,42 @@
+SkyVault API Documentation
+
+Overview
+SkyVault API is a REST-based cloud content management service designed for secure file storage, collaboration, and enterprise-grade data governance. It supports document lifecycle management, access control, audit compliance, and event-driven integrations.
+
+Authentication
+SkyVault uses OpenID Connect (OIDC) for authentication and identity federation.
+
+Endpoints:
+- POST /api/v2/auth/login
+- POST /api/v2/auth/token/refresh
+- POST /api/v2/auth/logout
+
+Account Management
+Account entity includes account_id, account_name, plan_type, billing_status, and created_at.
+Managed by AccountService.
+
+User Profiles
+Member entity represents users under an account.
+Managed by MemberService with AccessControlService.
+
+Document Management
+Document entity includes document_id, title, checksum, file_size, owner_member_id, and version.
+Managed by DocumentService.
+
+Access Control
+AccessGrant entity defines permission_level and expiry_time.
+Evaluated by AccessControlService.
+
+Search & Indexing
+DiscoveryService indexes document metadata and content.
+
+Notifications & Events
+EventService publishes document and member lifecycle events via Webhooks.
+
+Security & Compliance
+AES-256 encryption, immutable audit trails, and customer-managed keys.
+
+Service Dependencies
+- DocumentService -> StorageEngine, RetentionService
+- MemberService -> IdentityProvider, AccessControlService
+- EventService -> WebhookDispatcher, MessageQueue

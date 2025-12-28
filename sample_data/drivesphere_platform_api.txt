@@ -1,0 +1,45 @@
+DriveSphere Platform API Documentation
+
+Overview
+DriveSphere Platform API provides scalable digital asset storage, media processing, and real-time collaboration for distributed teams.
+
+Authentication
+JWT-based authentication with optional multi-factor authentication.
+
+Endpoints:
+- POST /platform/authenticate
+- POST /platform/token/renew
+- DELETE /platform/token/invalidate
+
+Tenant & Workspace Management
+Tenant entity represents an organization.
+Workspace entity represents logical collaboration spaces.
+
+Asset Management
+Asset entity represents media and documents.
+Managed by AssetPipeline.
+
+Upload & Processing
+Assets are ingested, transcoded, and enriched with metadata automatically.
+
+Permissions & Roles
+Role entity defines access such as owner, contributor, reviewer, and consumer.
+Resolved by RoleEngine.
+
+Collaboration & Activity Feed
+Activity entity tracks uploads, comments, and approvals.
+Published via ActivityService.
+
+Analytics & Insights
+AnalyticsService provides storage and activity metrics.
+
+Storage Architecture
+DistributedObjectStore with lifecycle-based cold storage.
+
+Security
+Zero-trust access, end-to-end encryption, and anomaly detection.
+
+Internal Service Graph
+- AssetPipeline -> MediaProcessor, MetadataEnricher, StorageAdapter
+- ActivityService -> RealtimeGateway, NotificationDispatcher
+- AnalyticsService -> MetricsCollector, TimeSeriesDB
